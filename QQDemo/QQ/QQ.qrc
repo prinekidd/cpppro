@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/QQ">
+        <file>Resources/timgXWGHXDQ8.jpg</file>
+        <file>Resources/QQ_Penguin_tencent_128px_500133_easyicon.net.png</file>
+        <file>Resources/QQ_Penguin_tencent_128px_500133_easyicon.net.ico</file>
+        <file>Resources/ico_lock.png</file>
+        <file>Resources/ico_pgun.png</file>
+        <file>Resources/qqio.png</file>
+        <file>Resources/ico_board.png</file>
+        <file>Resources/ico_set.png</file>
+    </qresource>
+</RCC>
