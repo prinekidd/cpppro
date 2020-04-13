@@ -78,7 +78,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <AdditionalIncludeDirectories>$(SolutionDir)../../../../Cpplib\jsoncpp\include;$(SolutionDir)commonheader;$(SolutionDir)QQ;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)../../../../Cpplib\jsoncpp\include;$(SolutionDir)commonheader;$(SolutionDir)QQ;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -95,6 +95,7 @@
     <ClCompile Include="QLineEditEx.cpp" />
     <ClCompile Include="QQ.cpp" />
     <ClCompile Include="QQSetWnd.cpp" />
+    <ClCompile Include="RegistWnd.cpp" />
     <ClCompile Include="TCPModel.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -104,6 +105,7 @@
     <QtUic Include="MainWnd.ui" />
     <QtUic Include="QQ.ui" />
     <QtUic Include="QQSetWnd.ui" />
+    <QtUic Include="RegistWnd.ui" />
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="QQ.qrc" />
@@ -114,6 +116,7 @@
   <ItemGroup>
     <ClInclude Include="common.h" />
     <ClInclude Include="E:\Cpplib\jsoncpp\src\lib_json\json_tool.h" />
+    <QtMoc Include="RegistWnd.h" />
     <ClInclude Include="singleton.h" />
     <ClInclude Include="TCPModel.h" />
     <QtMoc Include="QQSetWnd.h" />

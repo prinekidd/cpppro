@@ -475,25 +475,6 @@ QPushButton:pressed
      <string/>
     </property>
    </widget>
-   <widget class="QLabel" name="label_5">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>290</y>
-      <width>54</width>
-      <height>12</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true"/>
-    </property>
-    <property name="text">
-     <string>&lt;style&gt; a {text-decoration: none} &lt;/style&gt;&lt;a style='color: grey;' href=&quot;https://ssl.zc.qq.com/v3/index-chs.html&quot;&gt;注册账号</string>
-    </property>
-    <property name="openExternalLinks">
-     <bool>true</bool>
-    </property>
-   </widget>
    <widget class="QListWidget" name="listWidget">
     <property name="geometry">
      <rect>
@@ -527,6 +508,19 @@ background-color: rgb(194, 194, 194);</string>
      </property>
     </item>
    </widget>
+   <widget class="QPushButton" name="btn_regist">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>280</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>注册账号</string>
+    </property>
+   </widget>
    <zorder>btn_login</zorder>
    <zorder>widget_account_bg</zorder>
    <zorder>widget_pwd_bg</zorder>
@@ -535,8 +529,8 @@ background-color: rgb(194, 194, 194);</string>
    <zorder>btn_min</zorder>
    <zorder>opt_bg</zorder>
    <zorder>label_4</zorder>
-   <zorder>label_5</zorder>
    <zorder>listWidget</zorder>
+   <zorder>btn_regist</zorder>
   </widget>
   <widget class="QWidget" name="set_bg" native="true">
    <property name="geometry">

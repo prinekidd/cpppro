@@ -3,6 +3,7 @@
 #include <boost/format.hpp>
 #include <json/json.h>
 #include <commdef.h>
+
 	void CServer::accept_async() //发起一个异步接受连接
 	{
 		spSock_t spSock(new socket_t(ios));
@@ -29,8 +30,9 @@
 	{
 		if (!error)
 		{
-			//std::string ret_str=SRVBUSINESS->OnClientMsgHandle(data_, spSock->remote_endpoint().address().to_string());			
-			//spSock->async_write_some(boost::asio::buffer(ret_str), boost::bind(&CServer::send_handler, this, _1, spSock)); //发送数据
+			std::string ret_str=SRVBUSINESS->OnClientMsgHandle(data_, spSock);
+		
 			spSock->async_read_some(boost::asio::buffer(data_, max_len),boost::bind(&CServer::read_handler, this, _1, spSock));
 		}
 	}
+

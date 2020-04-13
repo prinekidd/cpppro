@@ -9,14 +9,16 @@ class MYSQLDB
 public:
 	MYSQLDB();
 	~MYSQLDB();
-
 	bool createDatabase(std::string& dbname);
 	bool createdbTable(const std::string& query);
 	bool SelectDB();
 	bool InsertData(std::string table_name, const std::string& data);
+	bool InsertRecord(const std::string& data);
 	bool InitDB();
 
-	bool signInQuery(const std::string& username, const std::string& password, std::string& result);
+	bool signInQuery(int user_id, const std::string& password, std::string& result);
+
+	int GenarateAcc();
 private:
 	MYSQL      m_mysql;
 	MYSQL_RES* res; //这个结构代表返回行的一个查询结果集

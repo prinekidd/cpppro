@@ -9,7 +9,7 @@
 #include <boost/bind.hpp>
 #include <boost\asio.hpp>
 #include <map>
-
+#include <commdef.h>
 #define max_len 1024
 using namespace std;
 typedef boost::asio::io_service io_service_t;
@@ -39,6 +39,8 @@ public:
 	void send_handler(const boost::system::error_code& ec, spSock_t spSock); //发送数据完成的回调
 
 	void read_handler(const boost::system::error_code& error, spSock_t spSock);
+
+
 private:
 	io_service_t& ios;
 	acceptor_t acceptor;

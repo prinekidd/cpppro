@@ -6,9 +6,20 @@ enum QQCOMMOMOP
 	SUCCESS,
 };
 
-//客户端请求类型
 
-enum CLIENT_RQ
+//客户端命令
+
+enum CLIENTCOMMAND
 {
-	ClientLogin=100,
+	ClientRegistAccRq = 1,
+	ClientRegistAccRs ,
+
+	ClientLoginRq,
+	ClientLoginRs ,
+};
+
+
+enum SERVERCOMMAND
+{
+	
 };

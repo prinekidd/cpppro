@@ -55,6 +55,9 @@
     <ClCompile Include="E:\Cpplib\jsoncpp\src\lib_json\json_writer.cpp">
       <Filter>jsoncpp</Filter>
     </ClCompile>
+    <ClCompile Include="RegistWnd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="QQ.h">
@@ -69,6 +72,9 @@
     <QtMoc Include="MainWnd.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="RegistWnd.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="QQ.ui">
@@ -78,6 +84,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="MainWnd.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="RegistWnd.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>

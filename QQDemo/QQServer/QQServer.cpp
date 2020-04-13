@@ -7,6 +7,7 @@
 #include <boost/bind.hpp>
 #include <boost\asio.hpp>
 #include <boost/thread.hpp> 
+#include "SrvBusiness.h"
 using namespace std;
 typedef boost::asio::io_service io_service_t;
 
@@ -22,8 +23,8 @@ void main()
 	t_dbinit.join();
 
 	io_service_t ios;
-	CServer srv(ios);
-
+	CServer *srv=new CServer(ios);
+	SRVBUSINESS->m_pCServer = srv;
 	cout << "QQ服务器正常运行" << endl;
 
 	ios.run(); //开启事件处理循环

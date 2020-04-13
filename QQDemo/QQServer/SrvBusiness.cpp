@@ -6,9 +6,10 @@
 #include <json/json.h>
 #include "MYSQLDB.h"
 #include <commdef.h>
+#include "ServerModel.h"
 using namespace boost::property_tree;
 
-std::string SrvBusiness::UserLogin(std::string json_userdata, std::string ipaddr, std::string &account)
+Json::Value SrvBusiness::UserLogin(std::string json_userdata, std::string ipaddr, std::string &account)
 {
 	Json::CharReaderBuilder b;
 	Json::CharReader* reader(b.newCharReader());
@@ -19,7 +20,7 @@ std::string SrvBusiness::UserLogin(std::string json_userdata, std::string ipaddr
 		int ret = -1;
 		std::string msg;
 		std::string pwd = root["password"].asString();
-		std::string acc = root["account"].asString();
+		int acc = root["account"].asInt();
 		account = acc;
 		std::string ret_str;
 		if (MYSQLSERVER->signInQuery(acc, pwd, ret_str))
@@ -28,28 +29,58 @@ std::string SrvBusiness::UserLogin(std::string json_userdata, std::string ipaddr
 			{
 				ret = 0;
 				m_curLoginUser.push_back(acc);
+				msg = "success";
+				boost::format fmt("%d,'%s',NOW()");
+				fmt% acc% ipaddr;
+				MYSQLSERVER->InsertRecord(fmt.str());
 			}
 			else
 			{
 				ret = 1;
-				ret_str = acc + " 已经登录";
+				msg = "failed";
 			}
 		}
-
-		boost::format fmt("%d,'%s', '%s','%s', %I64d");
-		fmt% m_login_index++% acc% pwd %ipaddr% GetCurTimeStmp();
-
-		MYSQLSERVER->InsertData("qquserdata",fmt.str());
+		else
+		{
+			ret = 1;
+			msg = "failed";
+		}
 
 		Json::Value root_ret;
 		root_ret["code"] = ret;
 		root_ret["msg"] = ret_str;
-		std::ostringstream os;
-		Json::StreamWriterBuilder sb;
-		Json::StreamWriter * writerb(sb.newStreamWriter());
-		writerb->write(root_ret, &os);
-		return root_ret.toStyledString();
+		return root_ret;
 	}
+}
+
+Json::Value SrvBusiness::UserRegist(std::string json_userdata)
+{
+	Json::CharReaderBuilder b;
+	Json::CharReader* reader(b.newCharReader());
+	Json::Value root;
+	JSONCPP_STRING errs;
+	if (reader->parse(json_userdata.c_str(), json_userdata.c_str() + std::strlen(json_userdata.c_str()), &root, &errs))
+	{
+		int ret = -1;
+		std::string msg="regist failed!";
+		std::string pwd = root["password"].asString();
+		std::string acc = root["account"].asString();
+		int account = MYSQLSERVER->GenarateAcc();
+		boost::format fmt("%d,'%s','%s'");
+		fmt% account% pwd% acc;
+
+		if (MYSQLSERVER->InsertData("user_list", fmt.str()))
+		{
+			ret = QQCOMMOMOP::SUCCESS;
+			msg = "success";
+		}
+		
+		Json::Value root_ret;
+		root_ret["code"] = ret;
+		root_ret["msg"] = msg;
+		return root_ret;
+	}
+	return std::string();
 }
 
 INT64 SrvBusiness::GetCurTimeStmp()
@@ -65,12 +96,8 @@ void SrvBusiness::SetLoginIndex(int idx)
 	m_login_index = idx;
 }
 
-bool SrvBusiness::CheckUserPwd(std::string acc, std::string pwd)
-{
-	//return MYSQLSERVER->signInQuery(acc, pwd,);
-}
 
-std::string SrvBusiness::OnClientMsgHandle(const std::string& json_userdata, std::string ipaddr)
+std::string SrvBusiness::OnClientMsgHandle(const std::string& json_userdata, spSock_t sock)
 {
 	Json::CharReaderBuilder crb;
 	Json::CharReader* reader(crb.newCharReader());
@@ -80,20 +107,36 @@ std::string SrvBusiness::OnClientMsgHandle(const std::string& json_userdata, std
 	{
 		int msg_type = root["msg_type"].asInt();
 		std::string data = root["data"].toStyledString();
-		std::string ret_jsonstr;
+		Json::Value ret_jsonstr;
 		switch (msg_type)
 		{
+			/*用户注册*/
+		case CLIENTCOMMAND::ClientRegistAccRq:
+		{
+			ret_jsonstr =UserRegist(data);
+			SendResponceToClient(CLIENTCOMMAND::ClientRegistAccRs, ret_jsonstr, sock);
+		}
+			break;
 		/*用户登录*/
-		case 1:
+		case CLIENTCOMMAND::ClientLoginRq:
 		{
 			std::string acc;
-			ret_jsonstr=UserLogin(data, ipaddr, acc);
+			ret_jsonstr=UserLogin(data, sock->remote_endpoint().address().to_string(), acc);
+			SendResponceToClient(CLIENTCOMMAND::ClientLoginRs, ret_jsonstr, sock);
 		}
 			break;
 		default:
 			break;
 		}
-		return ret_jsonstr;
+		return ret_jsonstr.toStyledString();
 	}
 	return "";
+}
+
+void SrvBusiness::SendResponceToClient(CLIENTCOMMAND msg_type, const Json::Value& json_msg, spSock_t sock)
+{
+	Json::Value root_ret;
+	root_ret["msg_type"] = msg_type;
+	root_ret["data"] = json_msg;
+	sock->async_write_some(boost::asio::buffer(root_ret.toStyledString()), boost::bind(&CServer::send_handler, m_pCServer, _1, sock)); //发送数据
 }

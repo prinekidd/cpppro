@@ -12,7 +12,7 @@
 #include <QTimeLine>
 #include "MainWnd.h"
 #include "TCPModel.h"
-
+#include "QQSetWnd.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -163,31 +163,68 @@ void QQ::on_btn_set_clicked()
   
 }
 
+void QQ::on_btn_regist_clicked()
+{
+    QQSetWnd *wd = new QQSetWnd;
+    wd->show();
+}
+
 void QQ::ReadData()
 {
 	QByteArray buffer = NetWork->GetQTcpSocket()->readAll();
 	if (!buffer.isEmpty())
 	{
-		Json::CharReaderBuilder b;
-		Json::CharReader* reader(b.newCharReader());
+		Json::CharReaderBuilder crb;
+		Json::CharReader* reader(crb.newCharReader());
 		Json::Value root;
 		JSONCPP_STRING errs;
-        int ret=-1; 
-        std::string msg;
-        if (reader->parse(buffer.toStdString().c_str(), buffer.toStdString().c_str() + std::strlen(buffer.toStdString().c_str()), &root, &errs))
-        {
-			int ret = root["code"].asInt();
-            msg = root["msg"].asString();
-			if (ret == QQCOMMOMOP::SUCCESS)
-			{
-				MainWnd* pwnd = new MainWnd;
-				this->hide();
-				pwnd->show();
-			}
-			else
-			{
-				QMessageBox::information(this, QString(QString::fromLocal8Bit("登录结果")),QString(QString::fromLocal8Bit(msg.c_str()) ));
-			}
-        }
+		int ret = -1;
+		std::string msg;
+		if (reader->parse(buffer, buffer.toStdString().c_str() + std::strlen(buffer), &root, &errs))
+		{
+			int msg_type = root["msg_type"].asInt();
+			std::string ret_jsonstr;
+			int ret = -1;
+			std::string msg;
+			 ret = root["data"]["code"].asInt();
+			msg = root["data"]["msg"].asString();
+				switch (msg_type)
+				{
+					/*用户注册结果*/
+				case CLIENTCOMMAND::ClientRegistAccRs:
+				{
+					if (ret == QQCOMMOMOP::SUCCESS)
+					{
+						QMessageBox::information(this, QString(QString::fromLocal8Bit("注册结果")), QString(QString::fromLocal8Bit(msg.c_str())));
+					}
+					else
+					{
+						QMessageBox::information(this, QString(QString::fromLocal8Bit("注册结果")), QString(QString::fromLocal8Bit(msg.c_str())));
+					}
+				}
+				break;
+				/*用户登录结果*/
+				case CLIENTCOMMAND::ClientLoginRs:
+				{
+
+					if (ret == QQCOMMOMOP::SUCCESS)
+					{
+						MainWnd* pwnd = new MainWnd;
+						this->hide();
+						pwnd->show();
+					}
+					else
+					{
+						QMessageBox::information(this, QString(QString::fromLocal8Bit("登录结果")), QString(QString::fromLocal8Bit(msg.c_str())));
+					}
+				}
+				break;
+				default:
+					break;
+				}
+
+			return;
+		}
+		return;
 	}
 }

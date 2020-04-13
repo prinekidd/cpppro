@@ -1,6 +1,7 @@
 #include "TCPModel.h"
 #include "common.h"
-#include <commdef.h>
+
+
 
 TCPModel::~TCPModel()
 {
@@ -21,17 +22,30 @@ bool TCPModel::ConnectToSrv()
 void TCPModel::LoginToSrv(QString acc, QString pwd)
 {
 	QJsonObject root_Obj;
-	QJsonObject root;
-	//添加键值对，值的类型自动识别，顺序不可自定义
+	root_Obj.insert("account", acc.toInt());
+	root_Obj.insert("password", pwd);
+	SendRequestToServer(CLIENTCOMMAND::ClientLoginRq, root_Obj);
+}
+
+void TCPModel::RegistAcc(QString acc, QString pwd)
+{
+	QJsonObject root_Obj;
 	root_Obj.insert("account", acc);
 	root_Obj.insert("password", pwd);
-	root.insert("msg_type", CLIENT_RQ::ClientLogin);
-	root.insert("data", root_Obj);
-	//创建Json文档
+
+	SendRequestToServer(CLIENTCOMMAND::ClientRegistAccRq, root_Obj);
+}
+
+
+
+void TCPModel::SendRequestToServer(CLIENTCOMMAND msg_type, const QJsonObject& jsonobj)
+{
+	QJsonObject root;
+	root.insert("msg_type", msg_type);
+	root.insert("data", jsonobj);
 	QJsonDocument root_Doc;
 	root_Doc.setObject(root);
 	QByteArray root_str = root_Doc.toJson(QJsonDocument::Compact);  //紧凑格式
-  // QByteArray root_str = root_Doc.toJson(QJsonDocument::Indented);   //标准JSON格式    QString strJson(root_str);
 	QString strJson(root_str);
 
 	m_tcpClient->write(strJson.toStdString().c_str());

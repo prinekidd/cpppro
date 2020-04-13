@@ -1,8 +1,9 @@
 #define _CRT_SECURE_NO_WARNINGS
+#include "SrvBusiness.h"
 #include "MYSQLDB.h"
 #include <iostream>
 #include<WinSock.h>
-#include "SrvBusiness.h"
+
 MYSQLDB::MYSQLDB()
 {
 }
@@ -46,7 +47,7 @@ bool MYSQLDB::SelectDB()
 {
 	mysql_query(&m_mysql, "set names gbk");
 	//返回0 查询成功，返回1查询失败  	
-	if (mysql_query(&m_mysql, "select * from qquserdate"))        //执行SQL语句  
+	if (mysql_query(&m_mysql, "select * from login_record"))        //执行SQL语句  
 	{		
 		printf("Query failed (%s)\n", mysql_error(&m_mysql));
 		return false;	
@@ -62,6 +63,7 @@ bool MYSQLDB::SelectDB()
 
 bool MYSQLDB::InsertData(std::string table_name, const std::string& data)
 {
+	
 	std::string under = "insert into "+ table_name+" values (" + data + ");";
 	strcpy(query, under.c_str());
 	if (mysql_query(&m_mysql, query))        //执行SQL语句  
@@ -75,6 +77,22 @@ bool MYSQLDB::InsertData(std::string table_name, const std::string& data)
 		return true;	
 	}
 
+}
+
+bool MYSQLDB::InsertRecord(const std::string& data)
+{
+	std::string under = "INSERT INTO `qqdata`.`login_record`(`user_account`, `ipadress`, `last_login_time`) VALUES("+data+")";
+	strcpy(query, under.c_str());
+	if (mysql_query(&m_mysql, query))        //执行SQL语句  
+	{
+		printf("Query failed (%s)\n", mysql_error(&m_mysql));
+		return false;
+	}
+	else
+	{
+		printf("增加记录[%s]到表login_record完成\n", data.c_str());
+		return true;
+	}
 }
 
 bool MYSQLDB::InitDB()
@@ -98,20 +116,20 @@ bool MYSQLDB::InitDB()
 
 	std::string database = "qqdata";
 	createDatabase(database);
-	std::string sql = "CREATE TABLE IF NOT EXISTS `qquserdate`( \
-        `login_index`     int,\
-		`user_account`     varchar(15),\
-		`password`         varchar(10),\
+	std::string sql = "CREATE TABLE IF NOT EXISTS `login_record`( \
+        `login_index`     INT UNSIGNED AUTO_INCREMENT,\
+		`user_account`     INT,\
         `ipadress`         varchar(20),\
-		`last_login_time`  BIGINT ,\
+		`last_login_time`  DATETIME ,\
 		PRIMARY KEY(`login_index`)\
 		) ENGINE = InnoDB DEFAULT CHARSET = latin1";
 	createdbTable(sql);
 
 
 	sql = "CREATE TABLE IF NOT EXISTS `user_list`( \
-		`user_account`     varchar(15),\
+		`user_account`     INT,\
 		`password`         varchar(10),\
+        `user_nick`         varchar(15),\
 		PRIMARY KEY(`user_account`)\
 		) ENGINE = InnoDB DEFAULT CHARSET = latin1";
 	createdbTable(sql);
@@ -121,10 +139,9 @@ bool MYSQLDB::InitDB()
 }
 
 
-bool MYSQLDB::signInQuery(const std::string& username, const std::string& password, std::string& result)
+bool MYSQLDB::signInQuery(int user_id, const std::string& password, std::string& result)
 {
-	std::string sql("SELECT username, password FROM user_list WHERE user_account = \"" + username + "\" AND password = \"" +
-		password + "\";");
+	std::string sql("SELECT user_account, password FROM user_list WHERE user_account = " +to_string(user_id) + ";");
 	if (mysql_query(&m_mysql, sql.c_str())) {
 		result.clear();
 		result += std::string(mysql_error(&m_mysql));
@@ -139,13 +156,13 @@ bool MYSQLDB::signInQuery(const std::string& username, const std::string& passwo
 
 	MYSQL_ROW row = mysql_fetch_row(res);
 	if (!row) {
-		result = std::string("user_account: " + username + " does not exist!");
+		result = std::string("user_account: " + to_string(user_id) + " does not exist!");
 		return false;
 	}
 	auto username_ = std::string(row[0]);
 	auto password_ = std::string(row[1]);
-	if (username != username_) {
-		result = std::string("user_account: " + username + " does not exist!");
+	if (to_string(user_id) != username_) {
+		result = std::string("user_account: " + to_string(user_id) + " does not exist!");
 		return false;
 	}
 	if (password_ != password) {
@@ -156,4 +173,24 @@ bool MYSQLDB::signInQuery(const std::string& username, const std::string& passwo
 	finishQuery();
 	result = "login success";
 	return true;
+}
+
+int MYSQLDB::GenarateAcc()
+{
+	mysql_query(&m_mysql, "set names gbk");
+	//返回0 查询成功，返回1查询失败  
+	if (mysql_query(&m_mysql, "SELECT COUNT(*) FROM user_list"))
+		//执行SQL语句  
+	{		
+		printf("Query failed (%s)\n", mysql_error(&m_mysql));
+		return false;
+	}	else	
+	{		
+		printf("query success\n");	
+	}	
+	res = mysql_store_result(&m_mysql);
+	column = mysql_fetch_row(res);
+	int acc = 10000 + atoi(column[0]);
+	mysql_free_result(res);
+	return acc;
 }

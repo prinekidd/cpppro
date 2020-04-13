@@ -2,6 +2,8 @@
 #include <QTcpSocket>
 #include <QHostAddress>
 #include "singleton.h"
+#include <commdef.h>
+
 class TCPModel
 {
 public:
@@ -11,7 +13,8 @@ public:
     bool ConnectToSrv();
     
     void LoginToSrv(QString acc,QString pwd);
-
+    void RegistAcc(QString acc, QString pwd);
+    void  SendRequestToServer(CLIENTCOMMAND msg_type, const QJsonObject& jsonobj);
     QTcpSocket* GetQTcpSocket();
 private:
     QTcpSocket* m_tcpClient;

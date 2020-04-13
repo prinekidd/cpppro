@@ -25,7 +25,7 @@ public slots:
 
 	void on_btn_login_clicked();
 	void on_btn_set_clicked();
-
+	void on_btn_regist_clicked();
 	void ReadData();
 private:
 	Ui::QQClass ui;
