@@ -1,6 +1,6 @@
 #include "TCPModel.h"
 #include "common.h"
-
+#include <QMessageBox>
 
 
 TCPModel::~TCPModel()
@@ -16,6 +16,7 @@ bool TCPModel::ConnectToSrv()
 	{
 		return true;
 	}
+	QMessageBox::information(NULL, QString(QString::fromLocal8Bit("错误")), QString(QString::fromLocal8Bit("未能连接到服务器")));
 	return false;
 }
 
@@ -24,7 +25,15 @@ void TCPModel::LoginToSrv(QString acc, QString pwd)
 	QJsonObject root_Obj;
 	root_Obj.insert("account", acc.toInt());
 	root_Obj.insert("password", pwd);
+	m_curAcc = acc;
 	SendRequestToServer(CLIENTCOMMAND::ClientLoginRq, root_Obj);
+}
+
+void TCPModel::LongOut()
+{
+	QJsonObject root_Obj;
+	root_Obj.insert("account", m_curAcc.toInt());
+	SendRequestToServer(CLIENTCOMMAND::ClientLogOutRq, root_Obj);
 }
 
 void TCPModel::RegistAcc(QString acc, QString pwd)
@@ -45,7 +54,7 @@ void TCPModel::SendRequestToServer(CLIENTCOMMAND msg_type, const QJsonObject& js
 	root.insert("data", jsonobj);
 	QJsonDocument root_Doc;
 	root_Doc.setObject(root);
-	QByteArray root_str = root_Doc.toJson(QJsonDocument::Compact);  //紧凑格式
+	QByteArray root_str = root_Doc.toJson(QJsonDocument::Compact); 
 	QString strJson(root_str);
 
 	m_tcpClient->write(strJson.toStdString().c_str());

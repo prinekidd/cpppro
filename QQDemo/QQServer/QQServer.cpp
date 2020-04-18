@@ -26,6 +26,5 @@ void main()
 	CServer *srv=new CServer(ios);
 	SRVBUSINESS->m_pCServer = srv;
 	cout << "QQ服务器正常运行" << endl;
-
 	ios.run(); //开启事件处理循环
 }

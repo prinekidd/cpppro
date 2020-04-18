@@ -27,7 +27,10 @@ public slots:
 	void on_btn_set_clicked();
 	void on_btn_regist_clicked();
 	void ReadData();
+	void TimerTimeOut();
 private:
 	Ui::QQClass ui;
+	QTimer* m_timer;
+	QString m_curUserId;
 	void Init();
 };

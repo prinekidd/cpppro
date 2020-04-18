@@ -13,11 +13,13 @@ public:
     bool ConnectToSrv();
     
     void LoginToSrv(QString acc,QString pwd);
+    void LongOut();
     void RegistAcc(QString acc, QString pwd);
     void  SendRequestToServer(CLIENTCOMMAND msg_type, const QJsonObject& jsonobj);
     QTcpSocket* GetQTcpSocket();
 private:
     QTcpSocket* m_tcpClient;
+    QString m_curAcc;
 };
 
 

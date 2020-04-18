@@ -23,7 +23,7 @@
 
 	void CServer::send_handler(const boost::system::error_code& ec, spSock_t spSock) //发送数据完成的回调
 	{
-		cout << "发送给客户端消息完成" << endl;
+
 	}
 
 	void CServer::read_handler(const boost::system::error_code& error, spSock_t spSock)

@@ -29,7 +29,6 @@ QQ::QQ(QWidget *parent)
 void QQ::Init()
 {
 	this->setWindowFlags(Qt::FramelessWindowHint);
-	//this->setAttribute(Qt::WA_TranslucentBackground);
     connect(ui.lineEdit, &QLineEditEx::Hovered, this, &QQ::OnLineHover);
     connect(ui.lineEdit, &QLineEditEx::Leaved, this, &QQ::OnLineLeave);
 	connect(ui.lineEdit_2, &QLineEditEx::Hovered, this, &QQ::OnLineHover);
@@ -46,8 +45,16 @@ void QQ::Init()
 	QPalette palette = ui.line1->palette();
 	palette.setColor(QPalette::Dark,QColor::fromRgb(216, 216, 216));
     ui.line1->setPalette(palette);
+	if (NULL == m_timer)    
+		m_timer = new QTimer;  
 }
 
+void QQ::TimerTimeOut()
+{
+	QJsonObject root_Obj;
+	root_Obj.insert("account", m_curUserId);
+	NetWork->SendRequestToServer(CLIENTCOMMAND::ClientHeatBeatRq, root_Obj);
+}
 static QPoint last(0, 0);        //保存坐标
 const int TITLE_HEIGHT = 50;    //这里也可以使用宏定义，保存标题高度，也就是鼠标点击区域的高度
 void QQ::mousePressEvent(QMouseEvent* event)
@@ -86,6 +93,7 @@ void QQ::mouseReleaseEvent(QMouseEvent* event)
 void QQ::on_btn_close_clicked()
 {
     this->close();
+	exit(0);
 }
 void QQ::on_btn_min_clicked()
 {
@@ -154,7 +162,8 @@ void QQ::itemClicked(QListWidgetItem* item)
 
 void QQ::on_btn_login_clicked()
 {
-    NetWork->LoginToSrv(ui.lineEdit->text(), ui.lineEdit_2->text());
+	m_curUserId = ui.lineEdit->text();
+    NetWork->LoginToSrv(m_curUserId, ui.lineEdit_2->text());
     return;
 }
 
@@ -174,57 +183,64 @@ void QQ::ReadData()
 	QByteArray buffer = NetWork->GetQTcpSocket()->readAll();
 	if (!buffer.isEmpty())
 	{
-		Json::CharReaderBuilder crb;
-		Json::CharReader* reader(crb.newCharReader());
-		Json::Value root;
-		JSONCPP_STRING errs;
-		int ret = -1;
-		std::string msg;
-		if (reader->parse(buffer, buffer.toStdString().c_str() + std::strlen(buffer), &root, &errs))
+		QJsonParseError err_rpt;
+		QJsonDocument  root_Doc = QJsonDocument::fromJson(buffer, &err_rpt);//字符串格式化为JSON
+		if (err_rpt.error != QJsonParseError::NoError)
 		{
-			int msg_type = root["msg_type"].asInt();
+			qDebug() << "JSON格式错误";
+			return ;
+		}
+		else    //JSON格式正确
+		{
 			std::string ret_jsonstr;
 			int ret = -1;
 			std::string msg;
-			 ret = root["data"]["code"].asInt();
-			msg = root["data"]["msg"].asString();
-				switch (msg_type)
+			QJsonObject root_Obj = root_Doc.object();
+		
+			int msg_type = root_Obj.value("msg_type").toInt();
+			QJsonObject data_Obj = root_Obj.value("data").toObject();
+			msg = data_Obj.value("msg").toString().toStdString();
+			ret = data_Obj.value("code").toInt();
+			switch (msg_type)
+			{
+				/*用户注册结果*/
+			case CLIENTCOMMAND::ClientRegistAccRs:
+			{
+				if (ret == QQCOMMOMOP::SUCCESS)
 				{
-					/*用户注册结果*/
-				case CLIENTCOMMAND::ClientRegistAccRs:
-				{
-					if (ret == QQCOMMOMOP::SUCCESS)
-					{
-						QMessageBox::information(this, QString(QString::fromLocal8Bit("注册结果")), QString(QString::fromLocal8Bit(msg.c_str())));
-					}
-					else
-					{
-						QMessageBox::information(this, QString(QString::fromLocal8Bit("注册结果")), QString(QString::fromLocal8Bit(msg.c_str())));
-					}
+					QMessageBox::information(this, QString(QString::fromLocal8Bit("注册结果")), QString(QString::fromLocal8Bit(msg.c_str())));
 				}
-				break;
-				/*用户登录结果*/
-				case CLIENTCOMMAND::ClientLoginRs:
+				else
 				{
+					QMessageBox::information(this, QString(QString::fromLocal8Bit("注册结果")), QString(QString::fromLocal8Bit(msg.c_str())));
+				}
+			}
+			break;
+			/*用户登录结果*/
+			case CLIENTCOMMAND::ClientLoginRs:
+			{
+				if (ret == QQCOMMOMOP::SUCCESS)
+				{
+					MainWnd* pwnd = new MainWnd;
+					this->hide();
+					pwnd->show();
 
-					if (ret == QQCOMMOMOP::SUCCESS)
-					{
-						MainWnd* pwnd = new MainWnd;
-						this->hide();
-						pwnd->show();
-					}
-					else
-					{
-						QMessageBox::information(this, QString(QString::fromLocal8Bit("登录结果")), QString(QString::fromLocal8Bit(msg.c_str())));
-					}
 				}
+				else
+				{
+					QMessageBox::information(this, QString(QString::fromLocal8Bit("登录结果")), QString(QString::fromLocal8Bit(msg.c_str())));
+				}
+			}
+			break;
+			/*用户登出结果*/
+			case CLIENTCOMMAND::ClientLogOutRs:
+			{
+				exit(0);
+			}
+			break;
+			default:
 				break;
-				default:
-					break;
-				}
-
-			return;
+			}
+			}
 		}
-		return;
-	}
 }

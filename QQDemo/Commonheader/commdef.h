@@ -16,8 +16,20 @@ enum CLIENTCOMMAND
 
 	ClientLoginRq,
 	ClientLoginRs ,
+
+	ClientLogOutRq,
+	ClientLogOutRs,
+
+	ClientHeatBeatRq,
+	ClientHeatBeatRs,
 };
 
+enum CLIENTSTATUS
+{
+	unkown = -1,
+	offline,
+	online,
+};
 
 enum SERVERCOMMAND
 {

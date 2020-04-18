@@ -7,6 +7,7 @@
 #include "MYSQLDB.h"
 #include <commdef.h>
 #include "ServerModel.h"
+
 using namespace boost::property_tree;
 
 Json::Value SrvBusiness::UserLogin(std::string json_userdata, std::string ipaddr, std::string &account)
@@ -21,34 +22,42 @@ Json::Value SrvBusiness::UserLogin(std::string json_userdata, std::string ipaddr
 		std::string msg;
 		std::string pwd = root["password"].asString();
 		int acc = root["account"].asInt();
-		account = acc;
 		std::string ret_str;
-		if (MYSQLSERVER->signInQuery(acc, pwd, ret_str))
+		if (std::find(m_curLoginUser.begin(), m_curLoginUser.end(), acc) == m_curLoginUser.end())
 		{
-			if (std::find(m_curLoginUser.begin(), m_curLoginUser.end(), acc) == m_curLoginUser.end())
+			if (MYSQLSERVER->signInQuery(acc, pwd, ret_str))
 			{
-				ret = 0;
-				m_curLoginUser.push_back(acc);
-				msg = "success";
-				boost::format fmt("%d,'%s',NOW()");
-				fmt% acc% ipaddr;
-				MYSQLSERVER->InsertRecord(fmt.str());
+				if (std::find(m_curLoginUser.begin(), m_curLoginUser.end(), acc) == m_curLoginUser.end())
+				{
+					ret = 0;
+					m_curLoginUser.push_back(acc);
+					msg = "success";
+					boost::format fmt("%d,'%s',NOW()");
+					fmt% acc% ipaddr;
+					MYSQLSERVER->InsertRecord(fmt.str());
+				}
+				else
+				{
+					ret = 1;
+					msg = "failed";
+				}
 			}
 			else
 			{
 				ret = 1;
-				msg = "failed";
+				ret_str = "failed";
 			}
 		}
 		else
 		{
 			ret = 1;
-			msg = "failed";
+			ret_str = "you account has been logined!";
 		}
 
 		Json::Value root_ret;
 		root_ret["code"] = ret;
 		root_ret["msg"] = ret_str;
+		cout << "用户登录" << acc << "结果：" << ret << endl;
 		return root_ret;
 	}
 }
@@ -78,6 +87,7 @@ Json::Value SrvBusiness::UserRegist(std::string json_userdata)
 		Json::Value root_ret;
 		root_ret["code"] = ret;
 		root_ret["msg"] = msg;
+		cout << "用户注册" << account << "结果：" << ret << endl;
 		return root_ret;
 	}
 	return std::string();
@@ -110,7 +120,7 @@ std::string SrvBusiness::OnClientMsgHandle(const std::string& json_userdata, spS
 		Json::Value ret_jsonstr;
 		switch (msg_type)
 		{
-			/*用户注册*/
+		/*用户注册*/
 		case CLIENTCOMMAND::ClientRegistAccRq:
 		{
 			ret_jsonstr =UserRegist(data);
@@ -123,6 +133,37 @@ std::string SrvBusiness::OnClientMsgHandle(const std::string& json_userdata, spS
 			std::string acc;
 			ret_jsonstr=UserLogin(data, sock->remote_endpoint().address().to_string(), acc);
 			SendResponceToClient(CLIENTCOMMAND::ClientLoginRs, ret_jsonstr, sock);
+		}
+			break;
+		/*用户登出*/
+		case CLIENTCOMMAND::ClientLogOutRq:
+		{
+			Json::CharReaderBuilder b;
+			Json::CharReader* reader(b.newCharReader());
+			Json::Value root_data;
+			JSONCPP_STRING errs;
+			if (reader->parse(data.c_str(), data.c_str() + std::strlen(data.c_str()), &root_data, &errs))
+			{
+				int ret = -1;
+				std::string msg = "logout failed!";
+				int use_id = root_data["account"].asInt();
+				for (list<int>::iterator iter = m_curLoginUser.begin(); iter != this->m_curLoginUser.end();)
+				{
+					if (*iter == use_id)
+					{
+						ret = 0;
+						msg = "logout success";
+						m_curLoginUser.erase(iter++);
+					}
+					else
+						++iter;
+				}
+				Json::Value root_ret;
+				root_ret["code"] = ret;
+				root_ret["msg"] = msg;
+				cout << "用户登出" << use_id << "结果：" << ret << endl;
+				SendResponceToClient(CLIENTCOMMAND::ClientLogOutRs, root_ret, sock);
+			}
 		}
 			break;
 		default:
